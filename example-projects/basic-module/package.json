@@ -1,0 +1,13 @@
+{
+    "type": "module",
+    "devDependencies": {
+        "vite": "^7.1.4",
+        "vite-encore-plugin": "workspace:*"
+    },
+    "license": "UNLICENSED",
+    "private": true,
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build"
+    }
+}

@@ -1,0 +1,10 @@
+packages:
+  - .
+  - example-projects/*
+
+ignoredBuiltDependencies:
+  - core-js
+  - esbuild
+
+onlyBuiltDependencies:
+  - lefthook

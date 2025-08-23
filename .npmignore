@@ -1,0 +1,8 @@
+.vscode
+example-projects
+lefthook.yml
+src
+eslint.config.mjs
+pnpm-workspace.yaml
+tsconfig.json
+tsup.config.ts

@@ -1,0 +1,14 @@
+# EXAMPLE USAGE:
+#
+#   Refer for explanation to following link:
+#   https://lefthook.dev/configuration/
+
+pre-commit:
+  parallel: true
+  commands:
+    typescript-check:
+      glob: "*.{ts,tsx,astro,css}"
+      run: pnpm exec tsc
+    elint:
+      glob: "*.{ts,tsx}"
+      run: pnpm exec eslint src

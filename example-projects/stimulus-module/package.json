@@ -1,0 +1,20 @@
+{
+    "type": "module",
+    "devDependencies": {
+        "@hotwired/stimulus": "^3.2.2",
+        "@symfony/stimulus-bridge": "^4.0.1",
+        "@symfony/ux-turbo": "^2.30.0",
+        "vite": "^7.1.4",
+        "vite-encore-plugin": "workspace:*"
+    },
+    "license": "UNLICENSED",
+    "private": true,
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "dev-server:webpack": "encore dev-server",
+        "dev:webpack": "encore dev",
+        "watch:webpack": "encore dev --watch",
+        "build:webpack": "encore production --progress"
+    }
+}
