@@ -1,4 +1,5 @@
 import path from "path";
+import type { InputOption } from "rollup";
 import type { ViteDevServer } from "vite";
 import type { EncoreManifestBuilder } from "./manifest";
 import type { ResolvedViteEncorePluginOptions } from "./options";
@@ -18,6 +19,22 @@ export interface EncoreEntrypointsManifest {
 }
 
 const VITE_CLIENT_FILENAME = "@vite/client";
+
+function mapInputs(buffer: Map<string, string>, input: InputOption) {
+    if (typeof input === "string") {
+        buffer.set(input, input);
+    }
+    else if (Array.isArray(input)) {
+        for (const item of input) {
+            mapInputs(buffer, item);
+        }
+    }
+    else {
+        for (const [key, value] of Object.entries(input)) {
+            buffer.set(key, value);
+        }
+    }
+}
 
 export class EncoreEntrypointsBuilder extends BuilderBase {
     #entrypoints: Map<string, UnfinishedEncoreEntrypoint> = new Map();
@@ -77,20 +94,7 @@ export class EncoreEntrypointsBuilder extends BuilderBase {
         this.addEntry(VITE_CLIENT_FILENAME, [VITE_CLIENT_FILENAME]);
         if (hook.config.build.rollupOptions.input) {
             const inputs: Map<string, string> = new Map();
-            const input = hook.config.build.rollupOptions.input;
-            if (typeof input === "string") {
-                inputs.set(input, input);
-            }
-            else if (Array.isArray(input)) {
-                for (const entry of input) {
-                    inputs.set(entry, entry);
-                }
-            }
-            else {
-                for (const [key, entry] of Object.entries(input)) {
-                    inputs.set(key, entry);
-                }
-            }
+            mapInputs(inputs, hook.config.build.rollupOptions.input);
             for (const [entryName, entryFilename] of inputs.entries()) {
                 const filename = path.basename(entryFilename);
                 let extension = path.extname(filename);

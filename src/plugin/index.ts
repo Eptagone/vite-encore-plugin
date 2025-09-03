@@ -2,15 +2,16 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 
+import type { InputOption } from "rollup";
 import type { Plugin, UserConfig } from "vite";
 import { initializeOptions, parseOptions, resolveOptions, type ViteEncorePluginOptions } from "../options";
-import { generateControllersImport, parseStimulusManifest } from "../stimulus";
+import { generateControllersCode, parseStimulusManifest } from "../stimulus";
 import { isStyleSheet } from "../utilities";
 import { State } from "./state";
 
-const VIRTUAL_CONTROLLERS_IMPORT_ID = "__VITE_ENCORE_PLUGIN_STIMULUS_BRIDGE__/controllers.js";
-const MANIFEST_ENTRY_NAME = "__VITE_ENCORE_PLUGIN__/manifest.json";
-const ENTRYPOINTS_ENTRY_NAME = "__VITE_ENCORE_PLUGIN__/entrypoints.json";
+const VIRTUAL_CONTROLLERS_NAME = "__VITE_ENCORE_PLUGIN_UX_CONTROLLERS__";
+const MANIFEST_ENTRY_NAME = "virtual:vite-encore-plugin/manifest";
+const ENTRYPOINTS_ENTRY_NAME = "virtual:vite-encore-plugin/entrypoints";
 
 /**
  * Vite Encore Plugin
@@ -22,9 +23,34 @@ export function viteEncorePlugin(options?: ViteEncorePluginOptions): Plugin {
 
     return {
         name: "vite-encore-plugin",
-        config: () => {
+        enforce: "pre",
+        config: (config) => {
             if (state.pluginOptions.enableStimulusBridge?.enabled) {
+                if (!fs.existsSync(state.pluginOptions.enableStimulusBridge.controllerJsonPath)) {
+                    throw new Error(
+                        `The file "${state.pluginOptions.enableStimulusBridge.controllerJsonPath}" could not be found.`,
+                    );
+                }
+                const controllersData = parseStimulusManifest(
+                    JSON.parse(fs.readFileSync(state.pluginOptions.enableStimulusBridge.controllerJsonPath, "utf8")),
+                );
+                state.controllersCode = generateControllersCode(controllersData);
+
+                let input: InputOption;
+                if (typeof config.build?.rollupOptions?.input === "object") {
+                    input = {};
+                    for (const name of controllersData.entrypoints) {
+                        input[name] = name;
+                    }
+                }
+                else {
+                    input = controllersData.entrypoints;
+                }
+
                 return {
+                    build: {
+                        rollupOptions: { input },
+                    },
                     resolve: {
                         alias: {
                             "@symfony/stimulus-bridge": "vite-encore-plugin/stimulus-bridge",
@@ -35,82 +61,45 @@ export function viteEncorePlugin(options?: ViteEncorePluginOptions): Plugin {
 
             return void 0;
         },
-        configResolved: {
-            handler: (config) => {
-                const resolvedOptions = resolveOptions(config, state.pluginOptions);
+        configResolved: (config) => {
+            const resolvedOptions = resolveOptions(config, state.pluginOptions);
 
-                state.manifestBuilder.applyOptions(resolvedOptions);
-                state.entrypointsBuilder.applyOptions(resolvedOptions);
-
-                if (state.pluginOptions.enableStimulusBridge?.enabled) {
-                    if (!fs.existsSync(state.pluginOptions.enableStimulusBridge.controllerJsonPath)) {
-                        throw new Error(
-                            `The file "${state.pluginOptions.enableStimulusBridge.controllerJsonPath}" could not be found.`,
-                        );
-                    }
-                    const controllersData = parseStimulusManifest(
-                        JSON.parse(fs.readFileSync(state.pluginOptions.enableStimulusBridge.controllerJsonPath, "utf8")),
-                    );
-                    for (const name of controllersData.entrypoints) {
-                        if (typeof config.build.rollupOptions.input === "string") {
-                            config.build.rollupOptions.input = [
-                                config.build.rollupOptions.input,
-                                name,
-                            ];
-                        }
-                        else if (Array.isArray(config.build.rollupOptions.input)) {
-                            config.build.rollupOptions.input.push(name);
-                        }
-                        else if (typeof config.build.rollupOptions.input === "object") {
-                            config.build.rollupOptions.input[path.basename(name).replace(/\.\w+$/, "")] = name;
-                        }
-                        else {
-                            config.build.rollupOptions.input = name;
-                        }
-                    }
-
-                    state.controllersCode = generateControllersImport(controllersData);
-                }
-            },
-            order: "post",
+            state.manifestBuilder.applyOptions(resolvedOptions);
+            state.entrypointsBuilder.applyOptions(resolvedOptions);
         },
-        resolveId: (id): string | void => {
-            if (id === VIRTUAL_CONTROLLERS_IMPORT_ID) {
-                return id;
+        configureServer: (hook) => {
+            state.entrypointsBuilder.useDevServer();
+            state.entrypointsBuilder.injectDevServerEntrypoints(hook, state.manifestBuilder);
+            state.manifestBuilder.useDevServer();
+
+            const entrypointsManifest = state.entrypointsBuilder.build();
+            const manifest = {
+                ...state.pluginOptions.manifestOptions.seed,
+                ...state.manifestBuilder.build(),
+            };
+
+            // Ensure the outputDir exists
+            if (!fs.existsSync(hook.config.build.outDir)) {
+                fs.mkdirSync(hook.config.build.outDir);
             }
-        },
-        load: (id): string | void => {
-            if (id === VIRTUAL_CONTROLLERS_IMPORT_ID) {
-                return state.controllersCode;
-            }
-        },
-        configureServer: {
-            handler: (hook) => {
-                state.entrypointsBuilder.useDevServer();
-                state.entrypointsBuilder.injectDevServerEntrypoints(hook, state.manifestBuilder);
-                state.manifestBuilder.useDevServer();
 
-                const entrypointsManifest = state.entrypointsBuilder.build();
-                const manifest = {
-                    ...state.pluginOptions.manifestOptions.seed,
-                    ...state.manifestBuilder.build(),
+            fs.writeFileSync(
+                path.join(hook.config.build.outDir, "entrypoints.json"),
+                JSON.stringify(entrypointsManifest, null, 2),
+            );
+            fs.writeFileSync(
+                path.join(hook.config.build.outDir, "manifest.json"),
+                JSON.stringify(manifest, null, 2),
+            );
+        },
+        transform: (code) => {
+            if (code.includes(VIRTUAL_CONTROLLERS_NAME) && state.controllersCode) {
+                return {
+                    code: code.replace(VIRTUAL_CONTROLLERS_NAME, state.controllersCode),
                 };
+            }
 
-                // Ensure the outputDir exists
-                if (!fs.existsSync(hook.config.build.outDir)) {
-                    fs.mkdirSync(hook.config.build.outDir);
-                }
-
-                fs.writeFileSync(
-                    path.join(hook.config.build.outDir, "entrypoints.json"),
-                    JSON.stringify(entrypointsManifest, null, 2),
-                );
-                fs.writeFileSync(
-                    path.join(hook.config.build.outDir, "manifest.json"),
-                    JSON.stringify(manifest, null, 2),
-                );
-            },
-            order: "post",
+            return void 0;
         },
         generateBundle: function (this, options, bundle) {
             for (const chunk of Object.values(bundle)) {

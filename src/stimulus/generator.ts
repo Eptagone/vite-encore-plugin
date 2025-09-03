@@ -4,7 +4,7 @@ import type { StimulusBridgeManifest, StimulusUxPackage } from "./models";
 const STIMULUS_PACKAGE_NAME = "@hotwired/stimulus";
 
 // This will generate a dictionary of controller importers
-export function generateControllersImport(config: StimulusBridgeManifest): string {
+export function generateControllersCode(config: StimulusBridgeManifest): string {
     const buffer = new Set<string>();
 
     if (!isPackageInstalled(STIMULUS_PACKAGE_NAME)) {
@@ -43,5 +43,5 @@ export function generateControllersImport(config: StimulusBridgeManifest): strin
         }
     }
 
-    return `export default { ${Array.from(buffer).join(",")} };`;
+    return `{${Array.from(buffer).join(",")}}`;
 }

@@ -1,5 +1,4 @@
 import { Application, Controller, type Context, type ControllerConstructor } from "@hotwired/stimulus";
-import symfonyControllers from "__VITE_ENCORE_PLUGIN_STIMULUS_BRIDGE__/controllers.js";
 
 type ControllerImporter = (() => Promise<ControllerConstructor> | ControllerConstructor);
 
@@ -7,6 +6,9 @@ interface LazyControllerProps {
     __stimulusLazyController?: boolean;
 }
 type LazyController = Controller & LazyControllerProps;
+
+declare const __VITE_ENCORE_PLUGIN_UX_CONTROLLERS__: Record<string, [() => Promise<import("@hotwired/stimulus").ControllerConstructor>, boolean]> | undefined;
+const symfonyUxControllers = __VITE_ENCORE_PLUGIN_UX_CONTROLLERS__;
 
 // @see https://esdiscuss.org/topic/add-reflect-isconstructor-and-reflect-iscallable#content-2
 function isConstructor(value: ControllerImporter | ControllerConstructor): value is ControllerConstructor {
@@ -71,15 +73,17 @@ export function startStimulusApp(context?: Record<string, ControllerImporter | C
             app.register(identifier, contructor);
         }
     };
-    for (const [identifier, info] of Object.entries(symfonyControllers)) {
-        const [importer, lazy] = info;
-        if (lazy) {
-            app.register(identifier, createLazyController(importer));
-        }
-        else {
-            importer().then((constructor) => {
-                app.register(identifier, constructor);
-            });
+    if (symfonyUxControllers) {
+        for (const [identifier, info] of Object.entries(symfonyUxControllers)) {
+            const [importer, lazy] = info;
+            if (lazy) {
+                app.register(identifier, createLazyController(importer));
+            }
+            else {
+                importer().then((constructor) => {
+                    app.register(identifier, constructor);
+                });
+            }
         }
     }
 
