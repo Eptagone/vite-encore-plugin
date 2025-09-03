@@ -1,19 +1,14 @@
 import { isPackageInstalled, requirePackage } from "../utilities";
 import type { StimulusBridgeManifest, StimulusUxPackage } from "./models";
 
-const REQUIRED_PACKAGES = [
-    "@hotwired/stimulus",
-    "@symfony/stimulus-bridge",
-];
+const STIMULUS_PACKAGE_NAME = "@hotwired/stimulus";
 
 // This will generate a dictionary of controller importers
 export function generateControllersImport(config: StimulusBridgeManifest): string {
     const buffer = new Set<string>();
 
-    for (const packageName of REQUIRED_PACKAGES) {
-        if (!isPackageInstalled(packageName)) {
-            throw new Error(`${packageName} is not installed. Try running "npm i ${packageName}".`);
-        }
+    if (!isPackageInstalled(STIMULUS_PACKAGE_NAME)) {
+        throw new Error(`${STIMULUS_PACKAGE_NAME} is not installed. Try running "npm i ${STIMULUS_PACKAGE_NAME}".`);
     }
 
     for (const [packageName, packageControllers] of Object.entries(config.controllers)) {
