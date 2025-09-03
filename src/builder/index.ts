@@ -1289,7 +1289,7 @@ class EncoreConfigBuilder {
             .sort((a, b) => a.priority - b.priority)
             .map(p => p.plugin);
 
-        const encorePlugin = viteEncorePlugin(structuredClone(this.#options));
+        const encorePlugin = viteEncorePlugin(this.#options);
         config.plugins.push(encorePlugin);
 
         return config;
