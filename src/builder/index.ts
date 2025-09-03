@@ -5,7 +5,7 @@ import type { Options as VuePluginOptions } from "@vitejs/plugin-vue";
 import type { Options as VueJsxPluginOptions } from "@vitejs/plugin-vue-jsx";
 import type PostCSS from "postcss";
 import type { OutputOptions, PreRenderedAsset, PreRenderedChunk, WatcherOptions } from "rollup";
-import type { BuildEnvironmentOptions as BuildOptions, CSSOptions, LessPreprocessorOptions, Plugin, SassPreprocessorOptions, ServerOptions, StylusPreprocessorOptions, TerserOptions, UserConfig } from "vite";
+import type { BuildEnvironmentOptions as BuildOptions, CSSOptions, LessPreprocessorOptions, Plugin, PluginOption, SassPreprocessorOptions, ServerOptions, StylusPreprocessorOptions, TerserOptions, UserConfig } from "vite";
 import type { ManifestOptions, ViteEncorePluginOptions } from "../options";
 import { viteEncorePlugin } from "../plugin";
 import { isPackageInstalled, requirePackage } from "../utilities";
@@ -45,7 +45,7 @@ interface GeneralPluginOptions {
     svelteOptions?: SveltePluginOptions | undefined;
 
     externals?: Record<string, string>;
-    additionalPlugins?: Array<{ plugin: Plugin; priority: number }>;
+    additionalPlugins?: Array<{ plugin: PluginOption; priority: number }>;
 }
 
 interface ConfigureFilenamesOptions {
@@ -300,7 +300,7 @@ class EncoreConfigBuilder {
      * Encore.addPlugin(new VitePluginLegacy());
      * ```
      */
-    addPlugin(plugin: Plugin, priority: number = 0) {
+    addPlugin(plugin: PluginOption, priority: number = 0) {
         if (!this.#pluginOptions.additionalPlugins?.some(p => p.plugin === plugin)) {
             this.#pluginOptions.additionalPlugins ??= [];
             this.#pluginOptions.additionalPlugins.push({ plugin, priority });
@@ -1082,7 +1082,7 @@ class EncoreConfigBuilder {
      * @deprecated There's no webpack here so this method will return the Vite config object instead.
      * Use the getViteConfig() method instead
      */
-    getWebpackConfig() {
+    getWebpackConfig(): UserConfig {
         return this.getViteConfig();
     }
 
@@ -1220,8 +1220,8 @@ class EncoreConfigBuilder {
      *
      * @returns
      */
-    getViteConfig() {
-        const config = structuredClone(this.#config);
+    getViteConfig(): UserConfig {
+        const config: UserConfig = { ...this.#config };
         this.#pluginOptions.additionalPlugins ??= [];
         const plugins = [...this.#pluginOptions.additionalPlugins];
 

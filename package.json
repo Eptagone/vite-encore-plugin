@@ -1,6 +1,6 @@
 {
   "name": "vite-encore-plugin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "A plugin to use Symfony Encore with Vite instead of Webpack. It produces an Encore compatible output using vite.",
   "keywords": [
@@ -57,7 +57,7 @@
     "lint": "tsc && eslint src",
     "watch": "tsup --sourcemap --watch"
   },
-  "packageManager": "pnpm@10.15.0",
+  "packageManager": "pnpm@10.15.1",
   "engines": {
     "node": "^16.20 || ^18.20 || ^20.19 || ^22.19 || >=24"
   },
