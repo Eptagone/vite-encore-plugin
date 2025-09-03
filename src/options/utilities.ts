@@ -118,6 +118,9 @@ export function initializeOptions(options: ViteEncorePluginOptions): Initialized
     if (options.manifestOptions?.removeKeyHash === false) {
         initializedOptions.manifestOptions.removeKeyHash = undefined;
     }
+    else if (options.manifestOptions?.removeKeyHash instanceof RegExp) {
+        initializedOptions.manifestOptions.removeKeyHash = options.manifestOptions.removeKeyHash;
+    }
     if (options.manifestOptions?.fileName) {
         initializedOptions.manifestOptions.fileName = options.manifestOptions.fileName;
     }
