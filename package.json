@@ -1,6 +1,6 @@
 {
   "name": "vite-encore-plugin",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "type": "module",
   "description": "A plugin to use Symfony Encore with Vite instead of Webpack. It produces an Encore compatible output using vite.",
   "keywords": [

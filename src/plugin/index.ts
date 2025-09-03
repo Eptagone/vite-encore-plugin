@@ -26,37 +26,45 @@ export function viteEncorePlugin(options?: ViteEncorePluginOptions): Plugin {
         enforce: "pre",
         config: (config) => {
             if (state.pluginOptions.enableStimulusBridge?.enabled) {
-                if (!fs.existsSync(state.pluginOptions.enableStimulusBridge.controllerJsonPath)) {
-                    throw new Error(
-                        `The file "${state.pluginOptions.enableStimulusBridge.controllerJsonPath}" could not be found.`,
-                    );
-                }
-                const controllersData = parseStimulusManifest(
-                    JSON.parse(fs.readFileSync(state.pluginOptions.enableStimulusBridge.controllerJsonPath, "utf8")),
-                );
-                state.controllersCode = generateControllersCode(controllersData);
-
-                let input: InputOption;
-                if (typeof config.build?.rollupOptions?.input === "object") {
-                    input = {};
-                    for (const name of controllersData.entrypoints) {
-                        input[name] = name;
-                    }
-                }
-                else {
-                    input = controllersData.entrypoints;
-                }
-
-                return {
-                    build: {
-                        rollupOptions: { input },
-                    },
+                const pluginConfig: UserConfig = {
                     resolve: {
                         alias: {
                             "@symfony/stimulus-bridge": "vite-encore-plugin/stimulus-bridge",
                         },
                     },
-                } satisfies UserConfig;
+                };
+
+                if (fs.existsSync(state.pluginOptions.enableStimulusBridge.controllerJsonPath)) {
+                    const controllersData = parseStimulusManifest(
+                        JSON.parse(fs.readFileSync(state.pluginOptions.enableStimulusBridge.controllerJsonPath, "utf8")),
+                    );
+                    state.controllersCode = generateControllersCode(controllersData);
+
+                    if (controllersData.entrypoints.length) {
+                        let input: InputOption;
+                        if (typeof config.build?.rollupOptions?.input === "object") {
+                            input = {};
+                            for (const name of controllersData.entrypoints) {
+                                input[name] = name;
+                            }
+                        }
+                        else {
+                            input = controllersData.entrypoints;
+                        }
+
+                        pluginConfig.build = {
+                            rollupOptions: {
+                                input,
+                            },
+                        };
+                    }
+                }
+                else {
+                    console.warn(`The file "${state.pluginOptions.enableStimulusBridge.controllerJsonPath}" could not be found.`);
+                }
+
+                state.controllersCode ??= "{}";
+                return pluginConfig;
             }
 
             return void 0;

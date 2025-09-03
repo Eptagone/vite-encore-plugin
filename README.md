@@ -1,5 +1,7 @@
 # Vite Encore Plugin
 
+![NPM Version](https://img.shields.io/npm/v/vite-encore-plugin?style=flat-square&link=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2Fvite-encore-plugin)
+
 This is an experimental vite plugin to use Symfony Encore with Vite instead of Webpack. It produces an Encore compatible output but using Vite, so you can still using [symfony/webpack-encore-bundle](https://github.com/symfony/webpack-encore-bundle) without additional dependencies.
 
 ## Features
@@ -17,7 +19,43 @@ npm install -D vite-encore-plugin
 
 ## Setup
 
-Suppose you have the following webpack encore config
+After installing the plugin, add it to your vite config like follows:
+
+```js
+// vite.config.mjs (ESM)
+import { defineConfig } from "vite";
+import viteEncorePlugin from "vite-encore-plugin";
+
+export default defineConfig({
+    // ...
+    plugins: [viteEncorePlugin()],
+});
+```
+
+```js
+// vite.config.cjs (CJS)
+const { defineConfig } = require("vite");
+const viteEncorePlugin = require("vite-encore-plugin");
+
+module.exports = defineConfig({
+    // ...
+    plugins: [viteEncorePlugin()],
+});
+```
+
+If you are using the Vite Dev Server, make sure the Vite Client script is rendered before the rest of entrypoints, otherwise they won't work. 
+This plugin provides the `@vite/client` entrypoint if the dev server is enabled, so you can use it like follows:
+
+```twig
+{# templates/example.html.twig #}
+{% if encore_entry_exists('@vite/client') %}
+    {{ encore_entry_script_tags('@vite/client', attributes = { type: "module" }) }}
+{% endif %}
+```
+
+## Migration from Webpack Encore
+
+Let's say you have the following webpack encore configuration
 
 ```js
 // webpack.config.cjs
@@ -78,16 +116,6 @@ Vite targets modules by default, so, you have the update your twig files to use 
 {{ encore_entry_script_tags('app', attributes = { type: "module" }) }}
 ```
 
-If you are using the Vite Dev Server, make sure the Vite Client script is rendered before the rest of entrypoints, otherwise they won't work. 
-This plugin provides the `@vite/client` entrypoint if the dev server is enabled, so you can use it like follows:
-
-```twig
-{# templates/example.html.twig #}
-{% if encore_entry_exists('@vite/client') %}
-    {{ encore_entry_script_tags('@vite/client', attributes = { type: "module" }) }}
-{% endif %}
-```
-
 ## Stimulus Bridge
 
 If you're using the stimulus bridge with UX components, you probably have the following option in your webpack encore config.
@@ -113,7 +141,7 @@ viteEncorePlugin({
 }
 ```
 
-If your're importing local controllers, your `bootstrap.js` probably looks like this:
+If you're importing local controllers, your old `bootstrap.js` probably looks like this:
 
 ```js
 // bootstrap.js
@@ -141,7 +169,7 @@ const app = startStimulusApp(
 );
 ```
 
-The plugin overrides the `@symfony/stimulus-bridge` package to support Vite. You may also prefer to use the plugin directly and remove the `@symfony/stimulus-bridge` dependency.
+The plugin overrides the `@symfony/stimulus-bridge` package to support Vite. However, you may prefer to use the plugin directly and remove the `@symfony/stimulus-bridge` dependency.
 
 ```typescript
 // bootstrap.js

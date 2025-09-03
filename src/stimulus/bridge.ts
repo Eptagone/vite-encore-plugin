@@ -53,24 +53,88 @@ function createLazyController(importer: ControllerImporter): ControllerConstruct
     };
 }
 
+interface StimulusBridgeOptions {
+    /**
+     * Enable debug mode
+     */
+    debug?: boolean;
+
+    /**
+     * A custom normalizer to generate the controller identifier for your context
+     * @remarks This won't change the normalization method used by the Stimulus bundle.
+     *
+     * @example
+     * ```ts
+     * startStimulusApp({
+     *     hello_controller: () => import('./hello_controller'),
+     * }, {
+     *     shouldEagerLoad: (key) => key..replace(/\.\w+$/, "")
+     *         .replace(/^.*\/controllers\//, "")
+     *         .replace(/_controller$/, "")
+     *         .replace(/\//g, "--")
+     *         .replace(/_/g, "-")
+     *         .toLowerCase()
+     * })
+     * ```
+     */
+    normalizer?: (key: string) => string;
+
+    /**
+     * A callback to determine if a controller should be eager loaded.
+     * @remarks This will only be used if the current entry is an importer function instead of a constructor.
+     *
+     * @example
+     * ```ts
+     * startStimulusApp({
+     *     hello_lazy_controller: () => import('./hello_lazy_controller'),
+     * }, {
+     *     shouldEagerLoad: (key) => key.endsWith('_lazy_controller')
+     * });
+     * ```
+     */
+    shouldEagerLoad?: (key: string, controllerName: string) => boolean;
+}
+
+type ContextBody = Record<string, ControllerImporter | ControllerConstructor>;
+
 /**
  * Starts a Stimulus application with the given controllers
  * @param context - An object mapping controller names to controller constructors or lazy controller loaders
+ * @param options - Additional options to configure the application
  */
-export function startStimulusApp(context?: Record<string, ControllerImporter | ControllerConstructor>): Application {
+export function startStimulusApp(context?: ContextBody | ContextBody[], options?: StimulusBridgeOptions): Application {
     const app = Application.start();
+    if (options?.debug) {
+        app.debug = true;
+    }
     if (context) {
-        for (const [path, importer] of Object.entries(context)) {
-            const identifier = path.replace(/\.\w+$/, "")
-                .replace(/^.*\/controllers\//, "")
-                .replace(/_controller$/, "")
-                .replace(/\//g, "--")
-                .replace(/_/g, "-")
-                .toLowerCase();
-            const contructor = isConstructor(importer)
-                ? importer
-                : createLazyController(importer);
-            app.register(identifier, contructor);
+        const controllerMappings: ContextBody[] = Array.isArray(context)
+            ? context
+            : [context];
+
+        for (const ctx of controllerMappings) {
+            for (const [path, importer] of Object.entries(ctx)) {
+                const identifier = options?.normalizer
+                    ? options.normalizer(path)
+                    : path.replace(/\.\w+$/, "")
+                        .replace(/^.*\/controllers\//, "")
+                        .replace(/_controller$/, "")
+                        .replace(/\//g, "--")
+                        .replace(/_/g, "-")
+                        .toLowerCase();
+                if (isConstructor(importer)) {
+                    app.register(identifier, importer);
+                }
+                else if (options?.shouldEagerLoad?.(path, identifier)) {
+                    queueMicrotask(async () => {
+                        const contructor = await importer();
+                        app.register(identifier, contructor);
+                    });
+                }
+                else {
+                    app.register(identifier, createLazyController(importer));
+                }
+            }
         }
     };
     if (symfonyUxControllers) {
