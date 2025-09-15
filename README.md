@@ -1,6 +1,6 @@
 # Vite Encore Plugin
 
-![NPM Version](https://img.shields.io/npm/v/vite-encore-plugin?style=flat-square&link=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2Fvite-encore-plugin)
+[![NPM Version](https://img.shields.io/npm/v/vite-encore-plugin?style=flat-square&link=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2Fvite-encore-plugin)](https://www.npmjs.com/package/vite-encore-plugin)
 
 This is an experimental vite plugin to use Symfony Encore with Vite instead of Webpack. It produces an Encore compatible output but using Vite, so you can still using [symfony/webpack-encore-bundle](https://github.com/symfony/webpack-encore-bundle) without additional dependencies.
 
