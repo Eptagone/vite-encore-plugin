@@ -1,4 +1,4 @@
-import { defineConfig, type Options } from "tsup";
+import { defineConfig, type Options } from "tsdown";
 
 export default defineConfig((cmdConfig) => {
     const BASE_CONFIG = {
@@ -7,7 +7,6 @@ export default defineConfig((cmdConfig) => {
         minify: !cmdConfig.watch,
         skipNodeModulesBundle: true,
         format: ["esm", "cjs"],
-        cjsInterop: true,
         shims: true,
         banner: {
             js: `/**
@@ -16,20 +15,6 @@ export default defineConfig((cmdConfig) => {
  * @author Quetzal Rivera
  * This project is not affiliated with Symfony.
  */`,
-        },
-        esbuildOptions(options, context) {
-            if (context.format === "cjs") {
-                options.define ??= {};
-                options.define = {
-                    ...options.define,
-                    "import.meta.dirname": "__dirname",
-                    "import.meta.filename": "__filename",
-                };
-                options.footer = {
-                    // @see https://github.com/evanw/esbuild/issues/1182#issuecomment-1011414271
-                    js: "module.exports = module.exports.default;",
-                };
-            }
         },
         ...cmdConfig,
     } satisfies Options;

@@ -2,9 +2,10 @@ import eslint from "@eslint/js";
 import stylistic from "@stylistic/eslint-plugin";
 import jsdoc from "eslint-plugin-jsdoc";
 import tsdoc from "eslint-plugin-tsdoc";
+import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
-export default tseslint.config(
+export default defineConfig(
     eslint.configs.recommended,
     ...tseslint.configs.recommendedTypeChecked,
     jsdoc.configs["flat/contents-typescript"],
