@@ -1,4 +1,4 @@
-import { defineConfig, type Options } from "tsdown";
+import { defineConfig, type UserConfig } from "tsdown";
 
 export default defineConfig((cmdConfig) => {
     const BASE_CONFIG = {
@@ -17,7 +17,7 @@ export default defineConfig((cmdConfig) => {
  */`,
         },
         ...cmdConfig,
-    } satisfies Options;
+    } satisfies UserConfig;
 
     return [
         // Plugin

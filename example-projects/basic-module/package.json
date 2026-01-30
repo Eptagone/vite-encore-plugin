@@ -1,8 +1,8 @@
 {
     "type": "module",
     "devDependencies": {
-        "vite": "^7.1.4",
-        "vite-encore-plugin": "workspace:*"
+        "vite": "^7.3.1",
+        "vite-encore-plugin": "link:../../.."
     },
     "license": "UNLICENSED",
     "private": true,

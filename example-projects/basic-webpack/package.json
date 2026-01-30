@@ -1,15 +1,15 @@
 {
     "devDependencies": {
-        "@babel/core": "^7.28.3",
-        "@babel/preset-env": "^7.28.3",
+        "@babel/core": "^7.28.6",
+        "@babel/preset-env": "^7.28.6",
         "@symfony/stimulus-bridge": "^4.0.1",
-        "@symfony/webpack-encore": "^5.2.0",
-        "core-js": "^3.45.1",
+        "@symfony/webpack-encore": "^5.3.1",
+        "core-js": "^3.48.0",
         "file-loader": "^6.2.0",
         "regenerator-runtime": "^0.14.1",
-        "webpack": "^5.101.3",
+        "webpack": "^5.104.1",
         "webpack-cli": "^6.0.1",
-        "webpack-dev-server": "^5.2.2"
+        "webpack-dev-server": "^5.2.3"
     },
     "license": "UNLICENSED",
     "private": true,
